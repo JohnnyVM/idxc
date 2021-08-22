@@ -2,13 +2,13 @@
 #include "CppUTest/TestHarness_c.h"
 
 /** For each C test group */
-TEST_GROUP_C_WRAPPER(template_name)
+TEST_GROUP_C_WRAPPER(idx)
 {
-    TEST_GROUP_C_SETUP_WRAPPER(template_name); /** optional */
-    TEST_GROUP_C_TEARDOWN_WRAPPER(template_name); /** optional */
+    TEST_GROUP_C_SETUP_WRAPPER(idx); /** optional */
+    TEST_GROUP_C_TEARDOWN_WRAPPER(idx); /** optional */
 };
 
-TEST_C_WRAPPER(template_name, dummy_test);
+TEST_C_WRAPPER(idx, read_bytes);
 
 int main(int ac, char** av)
 {
