@@ -46,7 +46,7 @@ TEST_C(idx, read_bytes)
 	struct idx_memory* idx_m = out.memory;
 	CHECK_C(idx_m->dimension == 1);
 	CHECK_C(idx_m->type_data == UNSIGNED_8_INT);
-	CHECK_C(idx_m->number_of_elements == 6000);
+	CHECK_C(idx_m->number_of_elements == 10000);
 
 	free(payload);
 }

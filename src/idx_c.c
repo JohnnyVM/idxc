@@ -1,9 +1,10 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <endian.h>
 
 #include "idx_c.h"
+
+#define SWAP_UINT32(x) (((x) >> 24) | (((x) & 0x00FF0000) >> 8) | (((x) & 0x0000FF00) << 8) | ((x) << 24))
 
 static bool check_idx_type_data(enum idx_type_data tdata) {
 	switch(tdata) {
@@ -52,7 +53,7 @@ struct idx_result idx_read_bytes(uint8_t* bytes, size_t length) {
 
 	uint32_t little_endian_32bits;
 	memcpy(&little_endian_32bits, &bytes[4], 4); // dimension
-	idx_m->number_of_elements = le32toh(little_endian_32bits);
+	idx_m->number_of_elements = SWAP_UINT32(little_endian_32bits);
 
 	memcpy(idx_m->element, &bytes[8], length - 8); // data
 
