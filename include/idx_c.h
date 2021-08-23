@@ -2,6 +2,7 @@
 #define IDX_C_H
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 
 /** Posible data types */
@@ -23,17 +24,17 @@ enum idx_type {
 struct idx_memory {
 	uint16_t must_0; /**< First 2 bytes are 0 */
 	uint8_t type_data; /**< type data */
-	uint8_t dimension; /**< number of dimensions */
-	uint32_t number_of_elements; // endianes go brrrrrrrrrr
+	uint8_t number_of_dimensions; /**< number of dimensions */
+	uint32_t* dimension_length; /**< dimension length, the array have number_of_dimensions length */
 	uint8_t element[]; /**< data array in "brute", require process for recover data */
 };
 
 struct idx_file {
 	uint16_t must_0; /**< First 2 bytes are 0 */
 	uint8_t type_data; /**< type data */
-	uint8_t dimension; /**< number of dimensions */
-	uint32_t number_of_elements; // endianes go brrrrrrrrrr
-	size_t offset; /**< if the data is not saved in memory current position of the file cursor */
+	uint8_t number_of_dimensions; /**< number of dimensions */
+	uint32_t* dimension_length;
+	FILE* fp; /**< if the data is not saved in memory current position of the file cursor */
 };
 
 /** List of posible errors */
@@ -61,6 +62,7 @@ struct idx_result {
 };
 
 struct idx_result idx_read_bytes(uint8_t* bytes, size_t length);
+size_t idx_memory_length(struct idx_memory* memory);
 
 #endif
 
