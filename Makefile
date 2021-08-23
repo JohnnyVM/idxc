@@ -25,7 +25,7 @@ DEPENDENCIES := $(patsubst %.c,%.d,${SOURCES})
 INCLUDE_FLAGS := -I./include -I./simple_dict/include
 WARNING_FLAGS := -Wextra -Wall -Wshadow -Wdouble-promotion \
 	-Wformat=2 -Wformat-truncation -fno-common -Wconversion -Warray-bounds \
-	-Wtrampolines -fanalyzer
+	-Wtrampolines
 CFLAGS += ${WARNING_FLAGS} ${INCLUDE_FLAGS} ${COMMON_FLAGS}
 export
 

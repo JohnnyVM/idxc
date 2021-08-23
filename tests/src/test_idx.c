@@ -1,19 +1,25 @@
 #include "CppUTest/TestHarness_c.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <stdint.h>
 
 #include "idx_c.h"
 
+// dummy function for get the info
 void get_bytes(const char* restrict path, uint8_t** data, size_t* len) {
 	FILE* fp = fopen(path, "rb");
+	if(fp == NULL) {
+		return;
+	}
 	size_t size = BUFSIZ;
 	uint8_t buffer[BUFSIZ];
 
 	while(size == BUFSIZ) {
-		size = fread(buffer, sizeof(**data), BUFSIZ, fp);
+		size = fread(buffer, sizeof **data, BUFSIZ, fp);
+		*data = realloc(*data, (*len + size) * sizeof **data);
+		memcpy(*data + *len, buffer, size);
 		*len += size;
-		*data = realloc(*data, *len * sizeof **data);
 	}
 }
 

@@ -48,6 +48,8 @@ struct idx_result idx_read_bytes(uint8_t* bytes, size_t length) {
 		return output;
 	}
 
+	memcpy(&idx_m->dimension, &bytes[3], 1); // dimension
+
 	uint32_t little_endian_32bits;
 	memcpy(&little_endian_32bits, &bytes[4], 4); // dimension
 	idx_m->number_of_elements = le32toh(little_endian_32bits);
