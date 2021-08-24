@@ -10,7 +10,7 @@ void idx_result_free(struct idx_result result) {
 		case IDX_FILE:
 			break;
 		case IDX_ELEMENT:
-			assert(0);
+			idx_element_free(result.element);
 	}
 }
 

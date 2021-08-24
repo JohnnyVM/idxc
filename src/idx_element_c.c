@@ -15,3 +15,10 @@ size_t idx_element_value_size(struct idx_element* element) {
 
 	return sum;
 }
+
+void idx_element_free(struct idx_element* element) {
+	if(element == NULL) { return; }
+	free(element->value);
+	if(element->number_of_dimensions > 1) { free(element->dimension_length); }
+	free(element);
+}

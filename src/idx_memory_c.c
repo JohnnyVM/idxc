@@ -125,7 +125,7 @@ struct idx_result idx_memory_element(struct idx_memory* memory, size_t position)
 	}
 
 	element->value = malloc(idx_element_value_size(element));
-	if(element->dimension_length == NULL) {
+	if(element->value == NULL) {
 		free(element->dimension_length);
 		free(element);
 		output.error = NOT_ENOUGHT_MEMORY;

@@ -41,14 +41,18 @@ TEST_C(idx, read_bytes)
 	get_bytes("static/idx/t10k-labels-idx1-ubyte", &payload, &length);
 
 	out = idx_read_bytes(payload, length);
-	CHECK_C(!out.error);
-	CHECK_C(out.type == IDX_MEMORY);
+	CHECK_C(!out.error && out.type == IDX_MEMORY);
 	struct idx_memory* idx_m = out.memory;
 	CHECK_C(idx_m->number_of_dimensions == 1);
 	CHECK_C(idx_m->type == UNSIGNED_8_INT);
 	CHECK_C(idx_m->number_of_elements == 10000);
 
-	idx_memory_free(out.memory);
+	struct idx_result res = idx_memory_element(idx_m, 0);
+	CHECK_C(!res.error && res.type == IDX_ELEMENT && res.element->type == UNSIGNED_8_INT);
+	CHECK_C(*(uint8_t*)res.element->value == 7);
+
+	idx_result_free(out);
+	idx_result_free(res);
 	free(payload);
 }
 
