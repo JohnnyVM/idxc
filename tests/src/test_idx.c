@@ -49,5 +49,6 @@ TEST_C(idx, read_bytes)
 	CHECK_C(idx_m->number_of_elements == 10000);
 
 	idx_memory_free(out.memory);
+	free(payload);
 }
 

@@ -1,5 +1,5 @@
-#ifndef IDX_TYPE_DATA_C_H
-#define IDX_TYPE_DATA_C_H
+#ifndef IDX_TYPE_C_H
+#define IDX_TYPE_C_H
 
 #include <stdlib.h>
 

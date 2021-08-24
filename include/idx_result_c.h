@@ -1,7 +1,7 @@
 #ifndef IDX_RESULT_C_H
 #define IDX_RESULT_C_H
 
-#include "idx_type_c.h"
+#include "idx_type_data_c.h"
 #include "idx_error_c.h"
 
 /** Operation output container */

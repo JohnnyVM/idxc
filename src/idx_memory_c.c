@@ -1,9 +1,10 @@
+#include <endian.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <endian.h>
 
-#include "idx_c.h"
+#include "idx_memory_c.h"
+#include "idx_result_c.h"
 
 static bool check_idx_type_data(enum idx_type_data tdata) {
 	switch(tdata) {
@@ -20,7 +21,7 @@ static bool check_idx_type_data(enum idx_type_data tdata) {
 }
 
 /** Return the number of bytes of the data that define the document(header?) */
-static size_t idx_memory_header_bytes(struct idx_memory* memory) {
+size_t idx_memory_header_bytes(struct idx_memory* memory) {
 	return  4 + sizeof(uint32_t) * (memory->number_of_dimensions == 1 ? 1: memory->number_of_dimensions + 1); // define dimension length
 }
 
@@ -74,8 +75,12 @@ struct idx_result idx_read_bytes(uint8_t* bytes, size_t length) {
 	// Number of elements in each dimension
 	if(idx_m->number_of_dimensions > 1) {
 		idx_m->dimension_length = malloc(idx_m->number_of_dimensions * sizeof(uint32_t));
+		if(idx_m->dimension_length == NULL) {
+			output.error = NOT_ENOUGHT_MEMORY;
+			return output;
+		}
 		for(size_t i = 0; i < idx_m->number_of_dimensions; i++) {
-			idx_m->dimension_length[i] = (((uint32_t*)&bytes[8])[i]);
+			idx_m->dimension_length[i] = be32toh(((uint32_t*)&bytes[8])[i]);
 		}
 	}
 
@@ -85,6 +90,54 @@ struct idx_result idx_read_bytes(uint8_t* bytes, size_t length) {
 
 	output.type = IDX_MEMORY;
 	output.memory = idx_m;
+	return output;
+}
+
+struct idx_result idx_memory_element(struct idx_memory* memory, size_t position) {
+	struct idx_result output = {0};
+	// copy the headers
+	if(memory == NULL || position >= memory->number_of_elements) {
+		output.error = INVALID_VALUES;
+		return output;
+	}
+
+	output.type = IDX_ELEMENT;
+
+	struct idx_element *element = output.element = malloc(sizeof *output.element);
+	if(element == NULL) {
+		output.error = NOT_ENOUGHT_MEMORY;
+		return output;
+	}
+
+	element->type = memory->type;
+	element->number_of_dimensions = memory->number_of_dimensions;
+	element->dimension_length = NULL;
+	if(element->number_of_dimensions > 1) {
+		element->dimension_length = malloc(element->number_of_dimensions * sizeof(uint32_t));
+		if(element->dimension_length == NULL) {
+			free(element);
+			output.error = NOT_ENOUGHT_MEMORY;
+			return output;
+		}
+		for(size_t i = 0; i < element->number_of_dimensions; i++) {
+			element->dimension_length[i] = memory->dimension_length[i];
+		}
+	}
+
+	element->value = malloc(idx_element_value_size(element));
+	if(element->dimension_length == NULL) {
+		free(element->dimension_length);
+		free(element);
+		output.error = NOT_ENOUGHT_MEMORY;
+		return output;
+	}
+
+	memcpy(
+			element->value,
+			&((uint8_t*)memory->element)[position * idx_element_value_size(element)],
+			idx_element_value_size(element)
+	);
+
 	return output;
 }
 

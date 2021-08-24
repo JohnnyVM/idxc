@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "idx_type_c.h"
+#include "idx_type_data_c.h"
 #include "idx_error_c.h"
 #include "idx_element_c.h"
 #include "idx_result_c.h"
@@ -20,6 +20,7 @@ struct idx_memory {
 };
 
 struct idx_result idx_read_bytes(uint8_t* bytes, size_t length);
+size_t idx_memory_header_bytes(struct idx_memory* memory);
 struct idx_result idx_memory_element(struct idx_memory* elem, size_t position);
 void idx_memory_free(struct idx_memory* elem);
 
