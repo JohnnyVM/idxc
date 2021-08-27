@@ -35,7 +35,7 @@ WARNING_FLAGS := -Wextra -Wall -Wshadow -Wdouble-promotion \
 CFLAGS += ${WARNING_FLAGS} ${INCLUDE_FLAGS} ${COMMON_FLAGS}
 CPPFLAGS += ${CFLAGS}
 
-PREFIX ?= /usr
+PREFIX ?= /usr/local
 export
 
 .PHONY: clean tests coverage library objects install
