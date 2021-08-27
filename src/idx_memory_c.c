@@ -28,12 +28,57 @@ size_t idx_memory_header_bytes(struct idx_memory* memory) {
 void idx_memory_free(struct idx_memory* memory) {
 	if(memory == NULL) { return; }
 	if(memory->number_of_dimensions > 1) {
-		free(memory->dimension_length);
+		free(memory->dimension);
 	}
 	free(memory);
 }
 
-struct idx_result idx_read_bytes(uint8_t* bytes, size_t length) {
+struct idx_result idx_memory_from_filename(const char* filename) {
+	struct idx_result output = {0};
+
+	if(filename == NULL) {
+		output.error = INVALID_VALUES;
+		return output;
+	}
+
+	FILE* fp = fopen(filename, "rb");
+	if(fp == NULL) {
+		output.error = INVALID_VALUES;
+		return output;
+	}
+
+	output = idx_memory_from_file(fp);
+
+	fclose(fp);
+
+	return output;
+}
+
+struct idx_result idx_memory_from_file(FILE* fp) {
+	size_t size = BUFSIZ, len = 0;
+	uint8_t buffer[BUFSIZ], *data = NULL;
+	struct idx_result output = {0};
+
+	if(fp == NULL) {
+		output.error = INVALID_VALUES;
+		return output;
+	}
+
+	while(size == BUFSIZ) {
+		size = fread(buffer, sizeof *data, BUFSIZ, fp);
+		data = realloc(data, (len + size) * sizeof *data);
+		memcpy(data + len, buffer, size);
+		len += size; // man not said fread can return less than 0
+	}
+
+	output = idx_memory_from_bytes(data, len);
+
+	free(data);
+
+	return output;
+}
+
+struct idx_result idx_memory_from_bytes(uint8_t* bytes, size_t length) {
 	struct idx_result output = {0};
 
 	if(bytes == NULL || length < 8 ) {
@@ -74,13 +119,13 @@ struct idx_result idx_read_bytes(uint8_t* bytes, size_t length) {
 
 	// Number of elements in each dimension
 	if(idx_m->number_of_dimensions > 1) {
-		idx_m->dimension_length = malloc(idx_m->number_of_dimensions * sizeof(uint32_t));
-		if(idx_m->dimension_length == NULL) {
+		idx_m->dimension = malloc(idx_m->number_of_dimensions * sizeof(uint32_t));
+		if(idx_m->dimension == NULL) {
 			output.error = NOT_ENOUGHT_MEMORY;
 			return output;
 		}
 		for(size_t i = 0; i < idx_m->number_of_dimensions; i++) {
-			idx_m->dimension_length[i] = be32toh(((uint32_t*)&bytes[8])[i]);
+			idx_m->dimension[i] = be32toh(((uint32_t*)&bytes[8])[i]);
 		}
 	}
 
@@ -111,22 +156,22 @@ struct idx_result idx_memory_element(struct idx_memory* memory, size_t position)
 
 	element->type = memory->type;
 	element->number_of_dimensions = memory->number_of_dimensions;
-	element->dimension_length = NULL;
+	element->dimension = NULL;
 	if(element->number_of_dimensions > 1) {
-		element->dimension_length = malloc(element->number_of_dimensions * sizeof(uint32_t));
-		if(element->dimension_length == NULL) {
+		element->dimension = malloc(element->number_of_dimensions * sizeof(uint32_t));
+		if(element->dimension == NULL) {
 			free(element);
 			output.error = NOT_ENOUGHT_MEMORY;
 			return output;
 		}
 		for(size_t i = 0; i < element->number_of_dimensions; i++) {
-			element->dimension_length[i] = memory->dimension_length[i];
+			element->dimension[i] = memory->dimension[i];
 		}
 	}
 
 	element->value = malloc(idx_element_value_size(element));
 	if(element->value == NULL) {
-		free(element->dimension_length);
+		free(element->dimension);
 		free(element);
 		output.error = NOT_ENOUGHT_MEMORY;
 		return output;

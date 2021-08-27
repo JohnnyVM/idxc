@@ -1,3 +1,6 @@
+.SUFFIXES:
+.SUFFIXES: .c .o .d .h .cpp .hpp
+
 PROJECT_NAME := template
 
 COMMON_FLAGS := -fexceptions
@@ -18,23 +21,34 @@ ifeq (${sanitize}, true)
 	COMMON_FLAGS += -fsanitize=address -fsanitize=leak -fsanitize=undefined
 endif
 
-SOURCES := $(wildcard src/*.c)
-OBJECTS := $(patsubst %.c,%.o,${SOURCES})
-DEPENDENCIES := $(patsubst %.c,%.d,${SOURCES})
+C_SOURCES := $(wildcard src/*.c)
+CPP_SOURCES := $(wildcard src/*.cpp)
+C_OBJECTS := $(patsubst %.c,%.o,${C_SOURCES})
+CPP_OBJECTS := $(patsubst %.cpp,%.o,${CPP_SOURCES})
+OBJECTS := ${CPP_OBJECTS} ${C_OBJECTS}
+DEPENDENCIES := $(patsubst %.c,%.d,${C_SOURCES}) $(patsubst %.cpp,%.d,${CPP_SOURCES})
 
 INCLUDE_FLAGS := -I./include -I./simple_dict/include
 WARNING_FLAGS := -Wextra -Wall -Wshadow -Wdouble-promotion \
 	-Wformat=2 -Wformat-truncation -fno-common -Wconversion -Warray-bounds \
 	-Wtrampolines
 CFLAGS += ${WARNING_FLAGS} ${INCLUDE_FLAGS} ${COMMON_FLAGS}
+CPPFLAGS += ${CFLAGS}
+
+PREFIX ?= /usr
 export
 
-.PHONY: clean tests coverage library
-${OBJECTS}: %.o: %.c
-	${CC} -Werror ${CFLAGS} -MMD -c $< -o $@
-
+.PHONY: clean tests coverage library objects install
 library: ${OBJECTS} | lib
 	ar -rc lib/lib${PROJECT_NAME}.a $^
+
+objects: ${OBJECTS}
+
+${C_OBJECTS}: %.o: %.c
+	${CC} -Werror ${CFLAGS} -MMD -c $< -o $@
+
+${CPP_OBJECTS}: %.o: %.cpp
+	${CC} -Werror ${CPPFLAGS} -MMD -c $< -o $@
 
 tests: ${OBJECTS}
 	${MAKE} -C tests tests
@@ -48,3 +62,7 @@ lib:
 clean:
 	-rm -rf ${OBJECTS} ${DEPENDENCIES} lib
 	-$(MAKE) -C tests clean
+
+install:
+	cp lib/* ${PREFIX}/lib
+	cp include/* ${PREFIX}/include

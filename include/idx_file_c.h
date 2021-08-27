@@ -9,7 +9,7 @@ struct idx_file {
 	uint8_t type; /**< type data */
 	uint8_t number_of_dimensions; /**< number of dimensions */
 	uint32_t number_of_elements; /**< number of elements in the file */
-	uint32_t* dimension_length;
+	uint32_t* dimension;
 	FILE* fp; /**< if the data is not saved in memory current position of the file cursor */
 };
 

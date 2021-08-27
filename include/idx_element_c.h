@@ -8,7 +8,7 @@
 struct idx_element {
 	enum idx_type_data type;
 	uint8_t number_of_dimensions;
-	uint32_t* dimension_length;
+	uint32_t* dimension;
 	void* value;
 };
 

@@ -6,23 +6,6 @@
 
 #include "idx_c.h"
 
-// dummy function for get the info
-void get_bytes(const char* restrict path, uint8_t** data, size_t* len) {
-	FILE* fp = fopen(path, "rb");
-	if(fp == NULL) {
-		return;
-	}
-	size_t size = BUFSIZ;
-	uint8_t buffer[BUFSIZ];
-
-	while(size == BUFSIZ) {
-		size = fread(buffer, sizeof **data, BUFSIZ, fp);
-		*data = realloc(*data, (*len + size) * sizeof **data);
-		memcpy(*data + *len, buffer, size);
-		*len += size;
-	}
-}
-
 TEST_GROUP_C_SETUP(idx)
 {
 }
@@ -35,12 +18,8 @@ TEST_GROUP_C_TEARDOWN(idx)
 TEST_C(idx, read_bytes)
 {
 	struct idx_result out;
-	uint8_t* payload = NULL;
-	size_t length = 0;
 
-	get_bytes("static/idx/t10k-labels-idx1-ubyte", &payload, &length);
-
-	out = idx_read_bytes(payload, length);
+	out = idx_memory_from_filename("static/idx/t10k-labels-idx1-ubyte");
 	CHECK_C(!out.error && out.type == IDX_MEMORY);
 	struct idx_memory* idx_m = out.memory;
 	CHECK_C(idx_m->number_of_dimensions == 1);
@@ -53,6 +32,5 @@ TEST_C(idx, read_bytes)
 
 	idx_result_free(out);
 	idx_result_free(res);
-	free(payload);
 }
 
