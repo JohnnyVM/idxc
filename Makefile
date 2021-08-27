@@ -1,7 +1,7 @@
 .SUFFIXES:
 .SUFFIXES: .c .o .d .h .cpp .hpp
 
-PROJECT_NAME := template
+PROJECT_NAME := idx
 
 COMMON_FLAGS := -fexceptions
 debug ?= false
