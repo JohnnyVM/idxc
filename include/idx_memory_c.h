@@ -14,6 +14,7 @@ struct idx_memory {
 	uint8_t type; /**< type data */
 	uint8_t number_of_dimensions; /**< number of dimensions */
 	uint32_t number_of_elements; /**< number of elements in the file */
+	size_t element_size;
 	uint32_t* dimension; /**< dimension length, the array have number_of_dimensions length */
 	uint8_t element[]; /**< data array in "brute", require process for recover data */
 };

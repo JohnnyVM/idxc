@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <typeinfo>
+#include <string.h>
 
 extern "C" {
 #include "idx_error_c.h"
@@ -27,23 +28,46 @@ Idx::Idx(const char* filename) {
 		throw memory.error;
 	}
 
-	std::shared_ptr<struct idx_memory> idx_ptr(memory.memory, idx_memory_free);
+	std::shared_ptr<struct idx_memory> mem(memory.memory, idx_memory_free);
 
 	// Pass from C to C++
-	payload = idx_ptr->element;
-	number_of_elements = idx_ptr->number_of_elements;
-	type = (enum idx_type_data)idx_ptr->type;
-	dimension.reserve(idx_ptr->number_of_dimensions);
+	element_size = mem->element_size;
+	payload = malloc(mem->number_of_elements * mem->element_size);
+	memcpy(payload, mem->element, mem->number_of_elements * mem->element_size);
+
+	number_of_elements = mem->number_of_elements;
+	type = (enum idx_type_data)mem->type;
+	dimension.reserve(mem->number_of_dimensions);
 	for(size_t i = 0; i < dimension.size(); i++) {
-		dimension[i] = idx_ptr->dimension[i];
+		dimension[i] = mem->dimension[i];
 	}
-
-
 }
 
-Idx::operator uint8_t*() const {
+Idx::~Idx() {
+	free(payload);
+}
+
+Idx::operator uint8_t*() noexcept {
 	if(type != UNSIGNED_8_INT) {
 		return nullptr;
 	}
-	return payload;
+
+	return (uint8_t*)payload;
 }
+
+Idx Idx::slice(size_t begin, size_t end) {
+
+	if(begin > end || begin > number_of_elements) { throw std::invalid_argument("Invalid index"); }
+	Idx out = *this;
+
+	out.payload = malloc(out.number_of_elements * out.element_size);
+
+	memcpy(out.payload, (uint8_t*)this->payload + begin * element_size, element_size * (end - begin));
+
+	return out;
+}
+
+Idx Idx::operator[](size_t position) {
+	return slice(position, position + 1);
+}
+

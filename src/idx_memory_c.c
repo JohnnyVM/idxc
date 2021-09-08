@@ -128,7 +128,6 @@ struct idx_result idx_memory_from_bytes(uint8_t* bytes, size_t length) {
 		return output;
 	}
 
-	/** I dont understand what happen here, very probably this work accidentally */
 	idx_m->number_of_elements = be32toh(*(uint32_t*)(&bytes[4]));
 
 	// Number of elements in each dimension
@@ -144,6 +143,7 @@ struct idx_result idx_memory_from_bytes(uint8_t* bytes, size_t length) {
 	}
 
 	/// \todo check the size is coherent
+	idx_m->element_size = idx_memory_element_size(idx_m);
 
 	memcpy(idx_m->element, &bytes[idx_memory_header_size(idx_m)], length - idx_memory_header_size(idx_m)); // data
 
@@ -166,7 +166,7 @@ struct idx_result idx_memory_slice(struct idx_memory* memory, size_t initial_pos
 	// Memory have to be allocated in block
 	void* tmp_memory = malloc(
 			sizeof *output.memory +
-			(uint32_t)(final_position - initial_position) * idx_memory_element_size(memory)
+			(uint32_t)(final_position - initial_position) * memory->element_size
 	);
 	if(!tmp_memory) {
 		output.error = NOT_ENOUGHT_MEMORY;
@@ -180,8 +180,8 @@ struct idx_result idx_memory_slice(struct idx_memory* memory, size_t initial_pos
 	memcpy(
 			output.memory->element,
 			memory->element
-			+ idx_memory_element_size(memory) * initial_position,
-			output.memory->number_of_elements * idx_memory_element_size(memory)
+			+ memory->element_size * initial_position,
+			output.memory->number_of_elements * memory->element_size
 	);
 
 	return output;

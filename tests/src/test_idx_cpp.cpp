@@ -16,5 +16,10 @@ TEST(idx_cpp, check_constructor)
 	auto out = Idx("static/idx/t10k-labels-idx1-ubyte");
 	CHECK(out.type == UNSIGNED_8_INT);
 	CHECK(out.number_of_elements == 10000);
+
+	auto slice_2 = out.slice(4,9);
+	auto slice = out[0];
+
+	CHECK(*static_cast<uint8_t*>(slice) == 7);
 }
 
