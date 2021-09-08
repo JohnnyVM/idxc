@@ -12,7 +12,6 @@ struct idx_result {
 		struct idx_error_message* error_message;
 		struct idx_memory* memory;
 		struct idx_file* file;
-		struct idx_element* element;
 	};
 };
 

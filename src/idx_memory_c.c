@@ -20,8 +20,22 @@ static bool check_idx_type_data(enum idx_type_data tdata) {
 	}
 }
 
+
+/* return the size of a element */
+size_t idx_memory_element_size(struct idx_memory* mem) {
+	size_t sum = 1;
+
+	for(unsigned i = 0; mem->number_of_dimensions > 1 && i < mem->number_of_dimensions;i++) {
+		sum *= mem->dimension[i];
+	}
+
+	sum *= idx_type_data_size(mem->type);
+
+	return sum;
+}
+
 /** Return the number of bytes of the data that define the document(header?) */
-size_t idx_memory_header_bytes(struct idx_memory* memory) {
+size_t idx_memory_header_size(struct idx_memory* memory) {
 	return  4 + sizeof(uint32_t) * (memory->number_of_dimensions == 1 ? 1: memory->number_of_dimensions + 1); // define dimension length
 }
 
@@ -131,58 +145,48 @@ struct idx_result idx_memory_from_bytes(uint8_t* bytes, size_t length) {
 
 	/// \todo check the size is coherent
 
-	memcpy(idx_m->element, &bytes[idx_memory_header_bytes(idx_m)], length - idx_memory_header_bytes(idx_m)); // data
+	memcpy(idx_m->element, &bytes[idx_memory_header_size(idx_m)], length - idx_memory_header_size(idx_m)); // data
 
 	output.type = IDX_MEMORY;
 	output.memory = idx_m;
 	return output;
 }
 
-struct idx_result idx_memory_element(struct idx_memory* memory, size_t position) {
+struct idx_result idx_memory_slice(struct idx_memory* memory, size_t initial_position, size_t final_position) {
 	struct idx_result output = {0};
 	// copy the headers
-	if(memory == NULL || position >= memory->number_of_elements) {
+	if(memory == NULL
+			|| initial_position > final_position
+			|| final_position >= memory->number_of_elements) {
 		output.error = INVALID_VALUES;
 		return output;
 	}
 
-	output.type = IDX_ELEMENT;
-
-	struct idx_element *element = output.element = malloc(sizeof *output.element);
-	if(element == NULL) {
+	output.type = IDX_MEMORY;
+	// Memory have to be allocated in block
+	void* tmp_memory = malloc(
+			sizeof *output.memory +
+			(uint32_t)(final_position - initial_position) * idx_memory_element_size(memory)
+	);
+	if(!tmp_memory) {
 		output.error = NOT_ENOUGHT_MEMORY;
 		return output;
 	}
+	output.memory = tmp_memory;
 
-	element->type = memory->type;
-	element->number_of_dimensions = memory->number_of_dimensions;
-	element->dimension = NULL;
-	if(element->number_of_dimensions > 1) {
-		element->dimension = malloc(element->number_of_dimensions * sizeof(uint32_t));
-		if(element->dimension == NULL) {
-			free(element);
-			output.error = NOT_ENOUGHT_MEMORY;
-			return output;
-		}
-		for(size_t i = 0; i < element->number_of_dimensions; i++) {
-			element->dimension[i] = memory->dimension[i];
-		}
-	}
-
-	element->value = malloc(idx_element_value_size(element));
-	if(element->value == NULL) {
-		free(element->dimension);
-		free(element);
-		output.error = NOT_ENOUGHT_MEMORY;
-		return output;
-	}
+	*output.memory = *memory;
+	output.memory->number_of_elements = (uint32_t)(final_position - initial_position);
 
 	memcpy(
-			element->value,
-			&((uint8_t*)memory->element)[position * idx_element_value_size(element)],
-			idx_element_value_size(element)
+			output.memory->element,
+			memory->element
+			+ idx_memory_element_size(memory) * initial_position,
+			output.memory->number_of_elements * idx_memory_element_size(memory)
 	);
 
 	return output;
 }
 
+struct idx_result idx_memory_element(struct idx_memory* mem, size_t position) {
+	return idx_memory_slice(mem, position, position + 1);
+}

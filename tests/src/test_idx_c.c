@@ -27,8 +27,8 @@ TEST_C(idx, read_bytes)
 	CHECK_C(idx_m->number_of_elements == 10000);
 
 	struct idx_result res = idx_memory_element(idx_m, 0);
-	CHECK_C(!res.error && res.type == IDX_ELEMENT && res.element->type == UNSIGNED_8_INT);
-	CHECK_C(*(uint8_t*)res.element->value == 7);
+	CHECK_C(!res.error && res.type == IDX_MEMORY && res.memory->type == UNSIGNED_8_INT);
+	CHECK_C(*(uint8_t*)res.memory->element == 7);
 
 	idx_result_free(out);
 	idx_result_free(res);

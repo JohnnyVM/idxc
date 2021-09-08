@@ -6,7 +6,6 @@
 enum idx_type {
 	IDX_FILE,
 	IDX_MEMORY,
-	IDX_ELEMENT,
 };
 
 /** Posible data types */

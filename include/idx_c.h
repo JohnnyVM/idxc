@@ -4,11 +4,6 @@
 #include "idx_memory_c.h"
 #include "idx_file_c.h"
 #include "idx_result_c.h"
-#include "idx_element_c.h"
-
-union idx {
-	struct idx_memory* memory;
-	struct idx_file* file;
-};
+#include "idx_common_c.h"
 
 #endif
