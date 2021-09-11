@@ -11,7 +11,7 @@
 /** Basic struct for contain the data */
 struct idx_memory {
 	uint16_t must_0; /**< First 2 bytes are 0 */
-	uint8_t type; /**< type data */
+	enum idx_type_data type; /**< type data */
 	uint8_t number_of_dimensions; /**< number of dimensions */
 	uint32_t number_of_elements; /**< number of elements in the file */
 	size_t element_size;

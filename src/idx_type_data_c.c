@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "idx_type_data_c.h"
 
@@ -18,5 +19,6 @@ size_t idx_type_data_size(enum idx_type_data data) {
 		case SIGNED_64_DOUBLE:
 			return sizeof(double);
 	}
+	assert(0);
 	return 0;
 }

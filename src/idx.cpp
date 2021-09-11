@@ -7,19 +7,32 @@
 #include <stdexcept>
 #include <typeinfo>
 #include <string.h>
+#include <cstddef>
 
 extern "C" {
 #include "idx_error_c.h"
 #include "idx_memory_c.h"
 #include "idx_result_c.h"
+#include "idx_type_data_c.h"
 }
 
 #include "idx.hpp"
 
-Idx::Idx(std::string& filename) {
+Idx::Idx(const Idx& ctor) :
+	type(ctor.type),
+	number_of_elements(ctor.number_of_elements),
+	element_size(ctor.element_size),
+	type_size(ctor.type_size)
+{
 
-	Idx{filename.c_str()};
+	payload = std::make_unique<std::uint8_t[]>(ctor.number_of_elements * ctor.element_size);
+	memcpy(payload.get(), ctor.payload.get(), ctor.number_of_elements * ctor.element_size);
+	dimension = ctor.dimension;
 }
+
+Idx::Idx(std::string& filename) : Idx{filename.c_str()} {}
+
+Idx::~Idx() {} // Created as tests
 
 Idx::Idx(const char* filename) {
 	struct idx_result memory = idx_memory_from_filename(filename);
@@ -28,41 +41,42 @@ Idx::Idx(const char* filename) {
 		throw memory.error;
 	}
 
-	std::shared_ptr<struct idx_memory> mem(memory.memory, idx_memory_free);
+	struct idx_memory* mem = memory.memory;
 
 	// Pass from C to C++
 	element_size = mem->element_size;
-	payload = malloc(mem->number_of_elements * mem->element_size);
-	memcpy(payload, mem->element, mem->number_of_elements * mem->element_size);
+	payload = std::make_unique<std::uint8_t[]>(mem->number_of_elements * mem->element_size);
+	memcpy(payload.get(), mem->element, mem->number_of_elements * mem->element_size);
 
 	number_of_elements = mem->number_of_elements;
-	type = (enum idx_type_data)mem->type;
+	type = mem->type;
+	type_size = idx_type_data_size(type);
 	dimension.reserve(mem->number_of_dimensions);
-	for(size_t i = 0; i < dimension.size(); i++) {
-		dimension[i] = mem->dimension[i];
+	for(size_t i = 0; i < mem->number_of_dimensions; i++) {
+		dimension.push_back(mem->dimension[i]);
 	}
+
+	idx_result_free(memory);
 }
 
-Idx::~Idx() {
-	free(payload);
-}
-
-Idx::operator uint8_t*() noexcept {
+Idx::operator uint8_t*() {
 	if(type != UNSIGNED_8_INT) {
 		return nullptr;
 	}
 
-	return (uint8_t*)payload;
+	return payload.get();
 }
 
 Idx Idx::slice(size_t begin, size_t end) {
 
 	if(begin > end || begin > number_of_elements) { throw std::invalid_argument("Invalid index"); }
+
 	Idx out = *this;
+	out.number_of_elements = end - begin;
 
-	out.payload = malloc(out.number_of_elements * out.element_size);
-
-	memcpy(out.payload, (uint8_t*)this->payload + begin * element_size, element_size * (end - begin));
+	out.payload.reset(nullptr);
+	out.payload = std::make_unique<std::uint8_t[]>(out.number_of_elements * out.element_size);
+	memcpy(out.payload.get(), this->payload.get() + begin * element_size, element_size * (end - begin));
 
 	return out;
 }

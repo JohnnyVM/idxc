@@ -4,6 +4,7 @@
 
 #include <string>
 #include <cstdint>
+#include <cstddef>
 #include <vector>
 
 extern "C" {
@@ -16,22 +17,24 @@ extern "C" {
 class Idx
 {
 	public:
+	Idx(const Idx&);// ctor
+	virtual ~Idx();
 	explicit Idx(const char* filename);
 	explicit Idx(std::string& filename);
-	~Idx();
 
-	explicit operator uint8_t*() noexcept;
+	explicit operator uint8_t*();
 	Idx operator[](size_t position);
 
 	enum idx_type_data type;
 	size_t number_of_elements;
 	std::vector<uint32_t>dimension;
 	Idx slice(size_t origin, size_t end);
+	size_t element_size;
+	size_t type_size;
+	std::unique_ptr<std::uint8_t[]> payload; // chunks of memory in big endian format
 
 	private:
-	size_t element_size;
 	explicit Idx(std::shared_ptr<struct idx_memory>);
-	void* payload; // chunks of memory in big endian format
 };
 
 #endif
