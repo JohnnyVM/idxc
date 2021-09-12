@@ -29,3 +29,21 @@ TEST(idx_cpp, check_constructor)
 	CHECK(*static_cast<uint8_t*>(slice) == 7);
 }
 
+TEST(idx_cpp, check_constructor_images)
+{
+
+	auto out = Idx("static/idx/t10k-images.idx3-ubyte");
+	CHECK(out.type == UNSIGNED_8_INT);
+	CHECK(out.number_of_elements == 10000);
+	CHECK(out.dimension.size() == 2);
+	CHECK(out.dimension[0] == 28);
+	CHECK(out.dimension[1] == 28);
+
+	auto slice = out[0];
+	CHECK(slice.number_of_elements == 1);
+
+	uint8_t check[] = {0,0,0,0,0}; // The beginning of the iamge is 0
+	for(size_t i = 0; i < 5; i++) {
+		CHECK((static_cast<uint8_t*>(slice.payload.get()))[i] == check[i] );
+	}
+}
