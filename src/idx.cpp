@@ -34,6 +34,23 @@ Idx::Idx(std::string& filename) : Idx{filename.c_str()} {}
 
 Idx::~Idx() {} // Created as tests
 
+Idx::Idx(Idx* parent, size_t begin, size_t end) {
+
+	if(begin > end || begin > parent->number_of_elements) { throw std::invalid_argument("Invalid index"); }
+
+	type = parent->type;
+	dimension = parent->dimension;
+	number_of_elements = end - begin;
+	element_size = parent->element_size;
+	type_size = parent->type_size;
+
+	payload = std::make_unique<std::uint8_t[]>(number_of_elements * element_size);
+	size_t begin_position = begin * element_size;
+	if(begin_position) { begin_position -= 1; }
+
+	memcpy(payload.get(), parent->payload.get() + begin_position, element_size * number_of_elements);
+}
+
 Idx::Idx(const char* filename) {
 	struct idx_result memory = idx_memory_from_filename(filename);
 	if(memory.error) {
@@ -67,21 +84,10 @@ Idx::operator uint8_t*() {
 	return payload.get();
 }
 
-Idx Idx::slice(size_t begin, size_t end) {
-
-	if(begin > end || begin > number_of_elements) { throw std::invalid_argument("Invalid index"); }
-
-	Idx out = *this;
-	out.number_of_elements = end - begin;
-
-	out.payload.reset(nullptr);
-	out.payload = std::make_unique<std::uint8_t[]>(out.number_of_elements * out.element_size);
-	memcpy(out.payload.get(), this->payload.get() + begin * element_size, element_size * (end - begin));
-
-	return out;
-}
-
 Idx Idx::operator[](size_t position) {
 	return slice(position, position + 1);
 }
 
+Idx Idx::slice(size_t begin, size_t end) {
+	return Idx(this, begin, end);
+}

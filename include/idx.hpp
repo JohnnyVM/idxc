@@ -21,6 +21,7 @@ class Idx
 	virtual ~Idx();
 	explicit Idx(const char* filename);
 	explicit Idx(std::string& filename);
+	explicit Idx(Idx* parent, size_t begin, size_t end);
 
 	explicit operator uint8_t*();
 	Idx operator[](size_t position);
