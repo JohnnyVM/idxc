@@ -30,6 +30,16 @@ TEST_C(idx, read_bytes)
 	CHECK_C(!res.error && res.type == IDX_MEMORY && res.memory->type == UNSIGNED_8_INT);
 	CHECK_C(*(uint8_t*)res.memory->element == 7);
 
+	struct idx_result slice = idx_memory_slice(idx_m, 4,9);
+	CHECK_C(!slice.error && slice.type == IDX_MEMORY && slice.memory->type == UNSIGNED_8_INT);
+	CHECK_C(slice.memory->number_of_elements == 5);
+	uint8_t check[] = {4,1,4,9,5};
+
+	for(size_t i = 0; i < slice.memory->number_of_elements; i++) {
+		CHECK_C(slice.memory->element[i] == check[i]);
+	}
+
+	idx_result_free(slice);
 	idx_result_free(out);
 	idx_result_free(res);
 }

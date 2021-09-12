@@ -45,10 +45,8 @@ Idx::Idx(Idx* parent, size_t begin, size_t end) {
 	type_size = parent->type_size;
 
 	payload = std::make_unique<std::uint8_t[]>(number_of_elements * element_size);
-	size_t begin_position = begin * element_size;
-	if(begin_position) { begin_position -= 1; }
 
-	memcpy(payload.get(), parent->payload.get() + begin_position, element_size * number_of_elements);
+	memcpy(payload.get(), parent->payload.get() + begin * element_size, element_size * number_of_elements);
 }
 
 Idx::Idx(const char* filename) {
