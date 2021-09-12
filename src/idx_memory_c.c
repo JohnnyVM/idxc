@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "idx_memory_c.h"
 #include "idx_result_c.h"
@@ -19,7 +20,6 @@ static bool check_idx_type_data(enum idx_type_data tdata) {
 			return false;
 	}
 }
-
 
 /* return the size of a element */
 size_t idx_memory_element_size(struct idx_memory* mem) {
@@ -121,6 +121,13 @@ struct idx_result idx_memory_from_bytes(uint8_t* bytes, size_t length) {
 		return output;
 	}
 
+	idx_m->number_of_elements = be32toh(*(uint32_t*)(&bytes[4]));
+
+	// (reference)[https://www.fon.hum.uva.nl/praat/manual/IDX_file_format.html]
+	// Number of elements in each dimension
+	// If the storage format indicates that there are more than 2 dimensions, the resulting Matrix accumulates
+	// dimensions 2 and higher in the columns. For example, with three dimensions of size n1, n2 and n3, respectively,
+	// the resulting Matrix object will have n1 rows and n2×n3 columns.
 	memcpy(&idx_m->number_of_dimensions, &bytes[3], 1); // dimension
 	if(!idx_m->number_of_dimensions) {
 		free(idx_m);
@@ -128,21 +135,30 @@ struct idx_result idx_memory_from_bytes(uint8_t* bytes, size_t length) {
 		return output;
 	}
 
-	idx_m->number_of_elements = be32toh(*(uint32_t*)(&bytes[4]));
-	// Number of elements in each dimension
+	if(idx_m->number_of_dimensions == 2) {
+		// Teorically only one element allowed?
+		assert(0); // i didnt test this case, i dont know how properly handle
+	}
+	else if(idx_m->number_of_dimensions > 2) {
+		idx_m->number_of_dimensions -= 1; // N elements of MXN
+	}
+
 	idx_m->dimension = malloc(idx_m->number_of_dimensions * sizeof *idx_m->dimension);
 	if(idx_m->dimension == NULL) {
 		output.error = NOT_ENOUGHT_MEMORY;
 		return output;
 	}
+
 	if(idx_m->number_of_dimensions == 1) {
 		idx_m->dimension[0] = idx_m->number_of_elements;
 	}
-	for(size_t i = 0;idx_m->number_of_dimensions > 1 && i < idx_m->number_of_dimensions; i++) {
-		idx_m->dimension[i] = be32toh(((uint32_t*)&bytes[8])[i]);
+	else if (idx_m->number_of_dimensions > 1) {
+		for(size_t i = 0;i < idx_m->number_of_dimensions; i++) {
+			idx_m->dimension[i] = be32toh(((uint32_t*)&bytes[8])[i]);
+		}
 	}
 
-	/// \todo check the size is coherent
+	// \todo check the size is coherent
 	idx_m->element_size = idx_memory_element_size(idx_m);
 
 	memcpy(idx_m->element, &bytes[idx_memory_header_size(idx_m)], length - idx_memory_header_size(idx_m)); // data

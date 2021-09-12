@@ -9,6 +9,7 @@ TEST_GROUP_C_WRAPPER(idx)
 };
 
 TEST_C_WRAPPER(idx, read_bytes);
+TEST_C_WRAPPER(idx, read_images);
 
 int main(int ac, char** av)
 {
